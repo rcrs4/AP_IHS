@@ -36,7 +36,7 @@ readCharN:
 		stosb
 ret
 
-cadastro:
+cadastro:;le o nome e o cpf etc bota na memoria na posicao guardada pelo "di" com a funcao stosb
 	push si 
 	mov si, CadastrarNome
 	call puts
@@ -52,53 +52,54 @@ cadastro:
 ret
 
 compara:
-	lodsb
+	lodsb;carrega de si
 	mov dl, al
-	mov al, bl
-	add al, '0'
-	mov ah, 0Eh
-	int 10h
-	mov al, byte[bx]
-	inc bx
-	cmp dl, al
-	jne end_compara
-	cmp al, 0
-	je busca_end
+	mov al, byte[bx];carrega de di
+	inc bx;aumenta o bx pra percorrer o ponteiro
+	cmp dl, al;compara 
+	jne end_compara;se for diferente sai da funcao
+	cmp al, 0;se for igual e al eh "0"(final da string) vai pra saida como nome igual
+	je end_compara_ok
 	jmp compara
+	end_compara_ok:
+		mov ax, 1000h;bota ax como parametro de retorno
 	end_compara:
-	inc cx
 ret
-busca:
+busca:; a busca eh um pouco mais complexa guardei o numero de di antes de pegar o nome do cadastro em bx pra poder sempre retornar nele
 	xor cx, cx
 	mov bx, di
-	mov al, bl
-	add al, '0'
-	mov ah, 0Eh
-	int 10h
-	push di
-	call readCharN
+	push di;dei push pra ter uma continuacao ao dar novo cadastro, nao perder o ponteiro pra o ultimo cadastro realizado
+	call readCharN;le nome que quer procurar 
 	pop di
+	mov ax, 100h;seta si pro começo dos cadastros so por garantia
+	mov si, ax
 	start_busca:
-		cmp cx, 0
-		jne passar
-		mov ax, 100h
-		mov si, ax
-		push bx
+		push bx;guarda o valor do comeco do nome a procurar
 		call compara
 		pop bx
-		jmp start_busca
-	passar:
+		cmp ax, 1000h;ve se deu certo ou nao
+		je busca_end
+		mov cx, 0
+	passar:;caso eh nome diferente passa todo o cadastro
 		lodsb
 		cmp al, 0
 		jne passar
+		mov ah, 0Eh
+		int 10h
 		inc cx
-		cmp cx, 4
+		cmp cx, 4;sao 4 componentes em cada cadastro
 		jne passar
 		mov cx, 0
 		jmp start_busca
 	busca_end:
 	call puts
+	mov al, 0x0a
+	mov ah, 0xe
+	int 10h
 	call puts
+	mov al, 0x0a
+	mov ah, 0xe
+	int 10h
 	call puts
 ret
 
@@ -128,15 +129,16 @@ ret
 veriComando:
 	mov ah, 0h
 	int 16h
-	start_comando:
+	start_comando:;pega um caractere e ve qual eh o comando
 		cmp al, "1"
 		jne is_2
 		call cadastro
 		is_2:
 			cmp al,"2"
 			jne is_zero
-			xor ax, ax
+			xor ax, ax;nao lembro pra que isso, mas acho q nao eh nada
 			call busca
+			jmp end_veri
 	is_zero:
 		cmp al, '0'
 		je end
@@ -156,19 +158,18 @@ ret
 start:
 	xor ax, ax
 	mov cx, ax
-	mov bx, 100h
+	mov bx, 100h;inicia com 100h pq eh uma boa posicao de memoria nao invade nada ate onde testei
 	mov ds, ax
 	mov es, ax
 	mov di, bx
 	mov si, bx
 	mov bx, ax
 	
-	call init
-	while:
+	call init;so pra modularizar, inicia o menu
+	while:;loop infinito ate o usuario apertar "0"
 		call veriComando
 	jmp while
 end:
 	call ler
-	times 510-($-$$) db 0
-	dw 0xaa55 
+
 	
