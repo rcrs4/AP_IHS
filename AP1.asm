@@ -8,6 +8,9 @@ deletarc db 'Deletar Conta: 4',0dh,0x0a,0
 listara db 'Listar Agencia: 5',0dh,0x0a,0
 listarcontasa db 'Listar Contas de uma Agencia: 6',0dh,0x0a,0
 CadastrarNome db 'Coloque seu Nome:', 0dh,0x0a, 0
+CadastrarCPF db 'Coloque seu CPF:', 0dh,0x0a, 0
+CadastrarAgencia db 'Coloque o Codigo da Agencia:', 0dh,0x0a, 0
+CadastrarConta db 'Coloque o numero da conta:', 0dh,0x0a, 0
 readCharN:
 	mov ah, 0h
 	int 16h
@@ -21,12 +24,28 @@ readCharN:
 	stosb
 	jmp readCharN
 	end_readCharN:
+		mov ah, 0Eh
+		int 10h
+		mov al, 0x0a
+		mov ah, 0Eh
+		int 10h
 		mov al, 0
 		stosb
 ret
 
 cadastro:
+	push si
+	mov si, CadastrarNome
+	call puts
 	call readCharN
+	call puts
+	call readCharN
+	call puts
+	call readCharN
+	call puts
+	call readCharN
+	pop si
+	
 ret
 
 ler:
@@ -58,10 +77,6 @@ veriComando:
 	start_comando:
 		cmp al, "1"
 		jne end_veri
-		push si
-		mov si, CadastrarNome
-		call puts
-		pop si
 		call cadastro
 	end_veri:
 ret
