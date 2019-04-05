@@ -7,7 +7,7 @@ editarc db 'Editar Conta: 3',0dh,0x0a,0
 deletarc db 'Deletar Conta: 4',0dh,0x0a,0
 listara db 'Listar Agencia: 5',0dh,0x0a,0
 listarcontasa db 'Listar Contas de uma Agencia: 6',0dh,0x0a,0
-CadastrarNome db 'Coloque seu Nome', 0dh,0x0a, 0
+CadastrarNome db 'Coloque seu Nome:', 0dh,0x0a, 0
 readCharN:
 	mov ah, 0h
 	int 16h
@@ -26,34 +26,17 @@ readCharN:
 ret
 
 cadastro:
-	xor cx, cx
-	push si
 	call readCharN
-	nome:
-		lodsb
-		cmp al, 0
-		je end_cadastro
-		mov byte[si], al
-		inc cx
-		jmp nome
-	end_cadastro:
-	mov byte[si], al
-	mov dx, 20
-	sub dx, cx
-	add si, dx
-	pop si
 ret
 
 ler:
-	mov al, byte[bx]
-	cmp al, 0
+	lodsb
+	cmp si, di
 	je end_ler
 	mov ah, 0xe
 	int 10h
 	jmp ler
 	end_ler:
-	mov ah, 0xe
-	int 10h
 ret
 
 puts:
@@ -63,18 +46,16 @@ puts:
 	mov ah, 0xe
 	int 10h
     jmp puts
-
-end_puts:
-	mov al, 0Dh
-	mov ah, 0xe
-	int 10h
+	end_puts:
+		mov al, 0Dh
+		mov ah, 0xe
+		int 10h
 ret
 
 veriComando:
-	call readCharN
-	lodsb
+	mov ah, 0h
+	int 16h
 	start_comando:
-		inc si
 		cmp al, "1"
 		jne end_veri
 		push si
@@ -85,12 +66,7 @@ veriComando:
 	end_veri:
 ret
 
-start:
-	xor ax, ax
-	mov cx, ax
-	mov bx, ax
-	mov ds, ax
-	mov es, ax
+init:
 	push si
 	mov si, cadastrarc
 	mov cx, 6
@@ -98,8 +74,17 @@ start:
 		call puts
 	loop L1
 	pop si
+ret
+
+start:
+	xor ax, ax
+	mov cx, ax
+	mov bx, ax
+	mov ds, ax
+	mov es, ax
+	call init
 	call veriComando
-	call ler
+
 end:
 	times 510-($-$$) db 0
 	dw 0xaa55 
