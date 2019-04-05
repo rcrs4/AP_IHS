@@ -1,5 +1,5 @@
 org 0x7e00
-jmp start
+jmp 0x0000:start
 
 cadastrarc db  'Cadastrar Conta: 1',0dh,0x0a,0
 buscarc db 'Buscar Conta: 2',0dh,0x0a,0
@@ -12,17 +12,19 @@ CadastrarCPF db 'Coloque seu CPF:', 0dh,0x0a, 0
 CadastrarAgencia db 'Coloque o Codigo da Agencia:', 0dh,0x0a, 0
 CadastrarConta db 'Coloque o numero da conta:', 0dh,0x0a, 0
 readCharN:
-	mov ah, 0h
-	int 16h
-	inc cx
-	cmp al, 0Dh
-	je end_readCharN
-	cmp cx, 20
-	jge end_readCharN
-	mov ah, 0Eh
-	int 10h
-	stosb
-	jmp readCharN
+	xor cx, cx
+	start_readCharN:
+		mov ah, 0h
+		int 16h
+		inc cx
+		cmp al, 0Dh
+		je end_readCharN
+		cmp cx, 20
+		jge end_readCharN
+		mov ah, 0Eh
+		int 10h
+		stosb
+		jmp start_readCharN
 	end_readCharN:
 		mov ah, 0Eh
 		int 10h
@@ -34,7 +36,7 @@ readCharN:
 ret
 
 cadastro:
-	push si
+	push si 
 	mov si, CadastrarNome
 	call puts
 	call readCharN
@@ -76,8 +78,11 @@ veriComando:
 	int 16h
 	start_comando:
 		cmp al, "1"
-		jne end_veri
+		jne is_zero
 		call cadastro
+	is_zero:
+		cmp al, '0'
+		je end
 	end_veri:
 ret
 
@@ -94,13 +99,19 @@ ret
 start:
 	xor ax, ax
 	mov cx, ax
-	mov bx, ax
+	mov bx, 100h
 	mov ds, ax
 	mov es, ax
+	mov di, bx
+	mov si, bx
+	mov bx, ax
+	
 	call init
-	call veriComando
-
+	while:
+		call veriComando
+	jmp while
 end:
+	call ler
 	times 510-($-$$) db 0
 	dw 0xaa55 
 	
