@@ -11,6 +11,7 @@ CadastrarNome db 'Coloque seu Nome:', 0dh,0x0a, 0
 CadastrarCPF db 'Coloque seu CPF:', 0dh,0x0a, 0
 CadastrarAgencia db 'Coloque o Codigo da Agencia:', 0dh,0x0a, 0
 CadastrarConta db 'Coloque o numero da conta:', 0dh,0x0a, 0
+inserirCPF db 'Insira o CPF:', 0dh, 0x0a, 0
 readCharN:
 	xor cx, cx
 	start_readCharN:
@@ -50,6 +51,57 @@ cadastro:
 	
 ret
 
+compara:
+	lodsb
+	mov dl, al
+	mov al, bl
+	add al, '0'
+	mov ah, 0Eh
+	int 10h
+	mov al, byte[bx]
+	inc bx
+	cmp dl, al
+	jne end_compara
+	cmp al, 0
+	je busca_end
+	jmp compara
+	end_compara:
+	inc cx
+ret
+busca:
+	xor cx, cx
+	mov bx, di
+	mov al, bl
+	add al, '0'
+	mov ah, 0Eh
+	int 10h
+	push di
+	call readCharN
+	pop di
+	start_busca:
+		cmp cx, 0
+		jne passar
+		mov ax, 100h
+		mov si, ax
+		push bx
+		call compara
+		pop bx
+		jmp start_busca
+	passar:
+		lodsb
+		cmp al, 0
+		jne passar
+		inc cx
+		cmp cx, 4
+		jne passar
+		mov cx, 0
+		jmp start_busca
+	busca_end:
+	call puts
+	call puts
+	call puts
+ret
+
 ler:
 	lodsb
 	cmp si, di
@@ -78,8 +130,13 @@ veriComando:
 	int 16h
 	start_comando:
 		cmp al, "1"
-		jne is_zero
+		jne is_2
 		call cadastro
+		is_2:
+			cmp al,"2"
+			jne is_zero
+			xor ax, ax
+			call busca
 	is_zero:
 		cmp al, '0'
 		je end
