@@ -12,6 +12,9 @@ CadastrarCPF db 'Coloque seu CPF:', 0dh,0x0a, 0
 CadastrarAgencia db 'Coloque o Codigo da Agencia:', 0dh,0x0a, 0
 CadastrarConta db 'Coloque o numero da conta:', 0dh,0x0a, 0
 inserirCPF db 'Insira o CPF:', 0dh, 0x0a, 0
+digiteComando db 'Digite o Comando: ', 0dh, 0x0a, 0
+nomeBusca db 'Coloque o nome para buscar conta: ', 0dh, 0x0a, 0
+
 readCharN:
 	xor cx, cx
 	start_readCharN:
@@ -74,8 +77,12 @@ busca:; a busca eh um pouco mais complexa guardei o numero de di antes de pegar 
 	mov ax, 100h;seta si pro começo dos cadastros so por garantia
 	mov si, ax
 	start_busca:
+		cmp si, di
+		je end_busca
 		push bx;guarda o valor do comeco do nome a procurar
+		push si
 		call compara
+		pop si
 		pop bx
 		cmp ax, 1000h;ve se deu certo ou nao
 		je busca_end
@@ -84,23 +91,29 @@ busca:; a busca eh um pouco mais complexa guardei o numero de di antes de pegar 
 		lodsb
 		cmp al, 0
 		jne passar
-		mov ah, 0Eh
-		int 10h
 		inc cx
 		cmp cx, 4;sao 4 componentes em cada cadastro
 		jne passar
 		mov cx, 0
 		jmp start_busca
 	busca_end:
-	call puts
-	mov al, 0x0a
-	mov ah, 0xe
-	int 10h
-	call puts
-	mov al, 0x0a
-	mov ah, 0xe
-	int 10h
-	call puts
+		call puts
+		mov al, 0x0a
+		mov ah, 0xe
+		int 10h
+		call puts
+		mov al, 0x0a
+		mov ah, 0xe
+		int 10h
+		call puts
+		mov al, 0x0a
+		mov ah, 0xe
+		int 10h
+		call puts
+		mov al, 0x0a
+		mov ah, 0xe
+		int 10h
+	end_busca:
 ret
 
 ler:
@@ -133,10 +146,13 @@ veriComando:
 		cmp al, "1"
 		jne is_2
 		call cadastro
+		jmp end_veri
 		is_2:
 			cmp al,"2"
 			jne is_zero
 			xor ax, ax;nao lembro pra que isso, mas acho q nao eh nada
+			mov si, nomeBusca
+			call puts
 			call busca
 			jmp end_veri
 	is_zero:
@@ -167,9 +183,12 @@ start:
 	
 	call init;so pra modularizar, inicia o menu
 	while:;loop infinito ate o usuario apertar "0"
+		push si
+		mov si, digiteComando
+		call puts
+		pop si
 		call veriComando
 	jmp while
 end:
-	call ler
 
 	
